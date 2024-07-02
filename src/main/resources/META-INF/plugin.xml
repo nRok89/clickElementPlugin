@@ -1,0 +1,53 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.click.clickElement</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>ClickElement</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="support@yourcompsany.com" url="https://www.yourcomspany.com">YourCosmpany</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+<!--    <description><![CDATA[-->
+<!--    Enter short description for your plugin here.<br>-->
+<!--    <em>most HTML tags may be used</em>-->
+<!--  ]]></description>-->
+    <description>
+        This plugin provides an action to display all variables in the class where the cursor is located.
+    </description>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+    <actions>
+        <action id="com.example.actions.SendKeysAction"
+                class="com.click.SendKeysAction"
+                text="Generate sendKeys()">
+            <add-to-group group-id="GenerateGroup" anchor="last"/>
+        </action>
+        <action id="com.example.actions.WebElementClickerAction"
+                class="com.click.clickWebElementAction"
+                text="Generate click()">
+            <add-to-group group-id="GenerateGroup" anchor="before" relative-to-action="com.example.actions.WebElementClickerAction"/>
+        </action>
+    </actions>
+
+
+
+<!--    <actions>-->
+<!--        <action class="clickWebElement" text="Click"/>-->
+<!--        <group id="ToolMenu" anchor="first"></group>-->
+<!--    </actions>-->
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+
+    </extensions>
+</idea-plugin>
