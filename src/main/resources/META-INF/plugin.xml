@@ -10,13 +10,6 @@
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="support@yourcompsany.com" url="https://www.yourcomspany.com">YourCosmpany</vendor>
 
-    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
-         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
-<!--    <description><![CDATA[-->
-<!--    Enter short description for your plugin here.<br>-->
-<!--    <em>most HTML tags may be used</em>-->
-<!--  ]]></description>-->
     <description>
         This plugin provides an action to display all variables in the class where the cursor is located.
     </description>
@@ -28,14 +21,19 @@
                 text="Generate sendKeys()">
             <add-to-group group-id="GenerateGroup" anchor="last"/>
         </action>
-        <action id="com.example.actions.WebElementClickerAction"
-                class="com.click.clickWebElementAction"
+        <action id="com.example.actions.ClickerAction"
+                class="com.click.ClickAction"
                 text="Generate click()">
-            <add-to-group group-id="GenerateGroup" anchor="before" relative-to-action="com.example.actions.WebElementClickerAction"/>
+            <add-to-group group-id="GenerateGroup" anchor="before" relative-to-action="com.example.actions.ClickerAction"/>
+        </action>
+        <action id="com.example.actions.ConfigAction"
+                class="com.click.ConfigAction"
+                text="Generate config()">
+            <add-to-group group-id="GenerateGroup" anchor="before" relative-to-action="com.example.actions.ClickerAction"/>
         </action>
     </actions>
 
-
+    ConfigAction
 
 <!--    <actions>-->
 <!--        <action class="clickWebElement" text="Click"/>-->

@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.List;
 
-public class clickWebElementAction extends AnAction {
+public class ClickAction extends AnAction {
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         Project project = e.getProject();
@@ -83,8 +83,9 @@ public class clickWebElementAction extends AnAction {
                 String fieldName = field.getName();
                 String capitalizedFieldName = capitalizeFirstLetter(fieldName);
 
-                String clickMethod = "public void click" + capitalizedFieldName + "() {\n" +
-                        "    " + fieldName + ".click();\n" +
+                String clickMethod = "public " + psiClass.getName() + " click" + capitalizedFieldName + "() {\n" +
+                        "    " + "clickElement(" + fieldName + ");\n" +
+                        "return this;\n" +
                         "}\n";
 
                 try {

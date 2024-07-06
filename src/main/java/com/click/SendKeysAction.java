@@ -38,7 +38,7 @@ public class SendKeysAction extends AnAction {
         // Filtrowanie pól typu WebElement i bez istniejących metod klikających
         PsiField[] fields = getWebElementFields(psiClass);
         if (fields.length == 0) {
-            Messages.showMessageDialog(project, "No WebElement fields found or all fields already have click methods.", "Info", Messages.getInformationIcon());
+            Messages.showMessageDialog(project, "No WebElement fields found or all fields already have sendKeys methods.", "Info", Messages.getInformationIcon());
             return;
         }
 
@@ -70,7 +70,7 @@ public class SendKeysAction extends AnAction {
     }
 
     private boolean hasClickMethod(PsiClass psiClass, PsiField field) {
-        String methodName = "enterText" + capitalizeFirstLetter(field.getName());
+        String methodName = "sendKeys" + capitalizeFirstLetter(field.getName());
         return Arrays.stream(psiClass.getMethods())
                 .anyMatch(method -> method.getName().equals(methodName));
     }
@@ -83,10 +83,9 @@ public class SendKeysAction extends AnAction {
                 String fieldName = field.getName();
                 String capitalizedFieldName = capitalizeFirstLetter(fieldName);
 
-                String clickMethod = "public void click" + capitalizedFieldName + "(String text) {\n" +
-                        "    " + fieldName + ".click();\n" +
-                        "    " + fieldName + ".clear();\n" +
-                        "    " + fieldName + ".sendKeys(text);\n" +
+                String clickMethod = "public " + psiClass.getName() + " sendKeys" + capitalizedFieldName + "(String text) {\n" +
+                        "    " + "sendKeys(" + fieldName + ",text);\n" +
+                        "return this;\n" +
                         "}\n";
 
                 try {
