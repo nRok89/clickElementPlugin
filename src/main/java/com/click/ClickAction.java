@@ -4,7 +4,9 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.CaretModel;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.LogicalPosition;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.psi.*;
@@ -45,7 +47,7 @@ public class ClickAction extends AnAction {
         SelectFieldsDialog dialog = new SelectFieldsDialog(fields);
         if (dialog.showAndGet()) {
             List<PsiField> selectedFields = dialog.getSelectedFields();
-            generateClickMethods(project, psiClass, selectedFields);
+            generateClickMethods(project, editor, psiFile, selectedFields);
         }
     }
 
@@ -75,21 +77,34 @@ public class ClickAction extends AnAction {
                 .anyMatch(method -> method.getName().equals(methodName));
     }
 
-    private void generateClickMethods(Project project, PsiClass psiClass, List<PsiField> selectedFields) {
+    private void generateClickMethods(Project project, Editor editor, PsiFile psiFile, List<PsiField> selectedFields) {
         WriteCommandAction.runWriteCommandAction(project, () -> {
             PsiElementFactory elementFactory = JavaPsiFacade.getElementFactory(project);
 
+            CaretModel caretModel = editor.getCaretModel();
+            LogicalPosition logicalPosition = caretModel.getLogicalPosition();
+            int offset = editor.logicalPositionToOffset(logicalPosition);
+
+            PsiElement elementAtCaret = psiFile.findElementAt(offset);
+            PsiClass targetClass = PsiTreeUtil.getParentOfType(elementAtCaret, PsiClass.class);
+            if (targetClass == null) {
+                targetClass = getPsiClassFromFile(psiFile);
+            }
+
+            PsiElement anchor = elementAtCaret;
             for (PsiField field : selectedFields) {
                 String fieldName = field.getName();
                 String capitalizedFieldName = capitalizeFirstLetter(fieldName);
 
-                String clickMethod = "public " + psiClass.getName() + " click" + capitalizedFieldName + "() {\n" +
-                        "    " + "clickElement(" + fieldName + ");\n" +
-                        "return this;\n" +
+                String clickMethod = "public " + targetClass.getName() + " click" + capitalizedFieldName + "() {\n" +
+                        "    clickElement(" + fieldName + ");\n" +
+                        "    return this;\n" +
                         "}\n";
 
                 try {
-                    psiClass.add(elementFactory.createMethodFromText(clickMethod, psiClass));
+                    PsiMethod newMethod = elementFactory.createMethodFromText(clickMethod, targetClass);
+                    PsiElement addedMethod = targetClass.addAfter(newMethod, anchor);
+                    anchor = addedMethod; // Update the anchor to the newly added method
                 } catch (IncorrectOperationException e) {
                     e.printStackTrace();
                 }

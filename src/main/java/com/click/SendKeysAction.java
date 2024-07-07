@@ -4,7 +4,9 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.CaretModel;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.LogicalPosition;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.psi.*;
@@ -35,7 +37,7 @@ public class SendKeysAction extends AnAction {
             return;
         }
 
-        // Filtrowanie pól typu WebElement i bez istniejących metod klikających
+        // Filtrowanie pól typu WebElement i bez istniejących metod sendKeys
         PsiField[] fields = getWebElementFields(psiClass);
         if (fields.length == 0) {
             Messages.showMessageDialog(project, "No WebElement fields found or all fields already have sendKeys methods.", "Info", Messages.getInformationIcon());
@@ -45,7 +47,7 @@ public class SendKeysAction extends AnAction {
         SelectFieldsDialog dialog = new SelectFieldsDialog(fields);
         if (dialog.showAndGet()) {
             List<PsiField> selectedFields = dialog.getSelectedFields();
-            generateClickMethods(project, psiClass, selectedFields);
+            generateSendKeysMethods(project, editor, psiFile, selectedFields);
         }
     }
 
@@ -60,7 +62,7 @@ public class SendKeysAction extends AnAction {
 
     private PsiField[] getWebElementFields(PsiClass psiClass) {
         return Arrays.stream(psiClass.getFields())
-                .filter(field -> isWebElement(field) && !hasClickMethod(psiClass, field))
+                .filter(field -> isWebElement(field) && !hasSendKeysMethod(psiClass, field))
                 .toArray(PsiField[]::new);
     }
 
@@ -69,27 +71,40 @@ public class SendKeysAction extends AnAction {
         return type.getCanonicalText().equals("org.openqa.selenium.WebElement");
     }
 
-    private boolean hasClickMethod(PsiClass psiClass, PsiField field) {
+    private boolean hasSendKeysMethod(PsiClass psiClass, PsiField field) {
         String methodName = "sendKeys" + capitalizeFirstLetter(field.getName());
         return Arrays.stream(psiClass.getMethods())
                 .anyMatch(method -> method.getName().equals(methodName));
     }
 
-    private void generateClickMethods(Project project, PsiClass psiClass, List<PsiField> selectedFields) {
+    private void generateSendKeysMethods(Project project, Editor editor, PsiFile psiFile, List<PsiField> selectedFields) {
         WriteCommandAction.runWriteCommandAction(project, () -> {
             PsiElementFactory elementFactory = JavaPsiFacade.getElementFactory(project);
 
+            CaretModel caretModel = editor.getCaretModel();
+            LogicalPosition logicalPosition = caretModel.getLogicalPosition();
+            int offset = editor.logicalPositionToOffset(logicalPosition);
+
+            PsiElement elementAtCaret = psiFile.findElementAt(offset);
+            PsiClass targetClass = PsiTreeUtil.getParentOfType(elementAtCaret, PsiClass.class);
+            if (targetClass == null) {
+                targetClass = getPsiClassFromFile(psiFile);
+            }
+
+            PsiElement anchor = elementAtCaret;
             for (PsiField field : selectedFields) {
                 String fieldName = field.getName();
                 String capitalizedFieldName = capitalizeFirstLetter(fieldName);
 
-                String clickMethod = "public " + psiClass.getName() + " sendKeys" + capitalizedFieldName + "(String text) {\n" +
-                        "    " + "sendKeys(" + fieldName + ",text);\n" +
-                        "return this;\n" +
+                String sendKeysMethod = "public " + targetClass.getName() + " sendKeys" + capitalizedFieldName + "(String text) {\n" +
+                        "    sendKeys(" + fieldName + ", text);\n" +
+                        "    return this;\n" +
                         "}\n";
 
                 try {
-                    psiClass.add(elementFactory.createMethodFromText(clickMethod, psiClass));
+                    PsiMethod newMethod = elementFactory.createMethodFromText(sendKeysMethod, targetClass);
+                    PsiElement addedMethod = targetClass.addAfter(newMethod, anchor);
+                    anchor = addedMethod; // Update the anchor to the newly added method
                 } catch (IncorrectOperationException e) {
                     e.printStackTrace();
                 }
