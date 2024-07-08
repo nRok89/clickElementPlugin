@@ -18,22 +18,22 @@
     <actions>
         <action id="com.example.actions.SendKeysAction"
                 class="com.click.SendKeysAction"
-                text="Generate sendKeys()">
-            <add-to-group group-id="GenerateGroup" anchor="last"/>
+                text="sendKeys()">
+            <add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="com.example.actions.ClickerAction"/>
         </action>
         <action id="com.example.actions.ClickerAction"
                 class="com.click.ClickAction"
-                text="Generate click()">
-            <add-to-group group-id="GenerateGroup" anchor="before" relative-to-action="com.example.actions.ClickerAction"/>
+                text="click()">
+            <add-to-group group-id="GenerateGroup" anchor="last" />
         </action>
-        <action id="com.example.actions.ConfigAction"
-                class="com.click.ConfigAction"
-                text="Generate config()">
-            <add-to-group group-id="GenerateGroup" anchor="before" relative-to-action="com.example.actions.ClickerAction"/>
-        </action>
+<!--        <action id="com.example.actions.Exe"-->
+<!--                class="com.click.ExecutionOrderAction"-->
+<!--                text="Generate Execution Order()">-->
+<!--            <add-to-group group-id="GenerateGroup" anchor="before" relative-to-action="com.example.actions.SendKeysAction"/>-->
+<!--        </action>-->
     </actions>
 
-    ConfigAction
+<!--    ConfigAction-->
 
 <!--    <actions>-->
 <!--        <action class="clickWebElement" text="Click"/>-->

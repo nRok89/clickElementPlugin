@@ -18,6 +18,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class SendKeysAction extends AnAction {
+    private static final String PREFIX_KEY = "SendKeysMethodPrefix";
+
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         Project project = e.getProject();
@@ -37,17 +39,18 @@ public class SendKeysAction extends AnAction {
             return;
         }
 
-        // Filtrowanie pól typu WebElement i bez istniejących metod sendKeys
+        // Filtrowanie pól typu WebElement i bez istniejących metod klikających
         PsiField[] fields = getWebElementFields(psiClass);
         if (fields.length == 0) {
             Messages.showMessageDialog(project, "No WebElement fields found or all fields already have sendKeys methods.", "Info", Messages.getInformationIcon());
             return;
         }
 
-        SelectFieldsDialog dialog = new SelectFieldsDialog(fields);
+        SelectFieldsDialog dialog = new SelectFieldsDialog(fields, "set", PREFIX_KEY);
         if (dialog.showAndGet()) {
             List<PsiField> selectedFields = dialog.getSelectedFields();
-            generateSendKeysMethods(project, editor, psiFile, selectedFields);
+            String methodPrefix = dialog.getMethodPrefix();
+            generateSendKeysMethods(project, editor, psiFile, selectedFields, methodPrefix);
         }
     }
 
@@ -72,12 +75,12 @@ public class SendKeysAction extends AnAction {
     }
 
     private boolean hasSendKeysMethod(PsiClass psiClass, PsiField field) {
-        String methodName = "sendKeys" + capitalizeFirstLetter(field.getName());
+        String methodName = "set" + capitalizeFirstLetter(field.getName());
         return Arrays.stream(psiClass.getMethods())
                 .anyMatch(method -> method.getName().equals(methodName));
     }
 
-    private void generateSendKeysMethods(Project project, Editor editor, PsiFile psiFile, List<PsiField> selectedFields) {
+    private void generateSendKeysMethods(Project project, Editor editor, PsiFile psiFile, List<PsiField> selectedFields, String methodPrefix) {
         WriteCommandAction.runWriteCommandAction(project, () -> {
             PsiElementFactory elementFactory = JavaPsiFacade.getElementFactory(project);
 
@@ -96,8 +99,8 @@ public class SendKeysAction extends AnAction {
                 String fieldName = field.getName();
                 String capitalizedFieldName = capitalizeFirstLetter(fieldName);
 
-                String sendKeysMethod = "public " + targetClass.getName() + " sendKeys" + capitalizedFieldName + "(String text) {\n" +
-                        "    sendKeys(" + fieldName + ", text);\n" +
+                String sendKeysMethod = "public " + targetClass.getName() + " " + methodPrefix + capitalizedFieldName + "(String text) {\n" +
+                        "    clickAndSendKeys(" + fieldName + ", text);\n" +
                         "    return this;\n" +
                         "}\n";
 

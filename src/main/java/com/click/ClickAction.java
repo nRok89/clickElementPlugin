@@ -18,6 +18,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ClickAction extends AnAction {
+    private static final String PREFIX_KEY = "ClickMethodPrefix";
+
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         Project project = e.getProject();
@@ -44,10 +46,11 @@ public class ClickAction extends AnAction {
             return;
         }
 
-        SelectFieldsDialog dialog = new SelectFieldsDialog(fields);
+        SelectFieldsDialog dialog = new SelectFieldsDialog(fields, "click", PREFIX_KEY);
         if (dialog.showAndGet()) {
             List<PsiField> selectedFields = dialog.getSelectedFields();
-            generateClickMethods(project, editor, psiFile, selectedFields);
+            String methodPrefix = dialog.getMethodPrefix();
+            generateClickMethods(project, editor, psiFile, selectedFields, methodPrefix);
         }
     }
 
@@ -77,7 +80,7 @@ public class ClickAction extends AnAction {
                 .anyMatch(method -> method.getName().equals(methodName));
     }
 
-    private void generateClickMethods(Project project, Editor editor, PsiFile psiFile, List<PsiField> selectedFields) {
+    private void generateClickMethods(Project project, Editor editor, PsiFile psiFile, List<PsiField> selectedFields, String methodPrefix) {
         WriteCommandAction.runWriteCommandAction(project, () -> {
             PsiElementFactory elementFactory = JavaPsiFacade.getElementFactory(project);
 
@@ -96,7 +99,7 @@ public class ClickAction extends AnAction {
                 String fieldName = field.getName();
                 String capitalizedFieldName = capitalizeFirstLetter(fieldName);
 
-                String clickMethod = "public " + targetClass.getName() + " click" + capitalizedFieldName + "() {\n" +
+                String clickMethod = "public " + targetClass.getName() + " " + methodPrefix + capitalizedFieldName + "() {\n" +
                         "    clickElement(" + fieldName + ");\n" +
                         "    return this;\n" +
                         "}\n";
